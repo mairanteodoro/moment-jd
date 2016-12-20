@@ -1,5 +1,3 @@
-import * as moment from 'moment';
-
 ;(function(moment) {
 //////
 // Julian Date (Julian day + time)

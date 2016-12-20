@@ -14212,13 +14212,7 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	var _moment = __webpack_require__(2);
-
-	var moment = _interopRequireWildcard(_moment);
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	/* WEBPACK VAR INJECTION */(function(moment) {'use strict';
 
 	;(function (moment) {
 	  //////
@@ -14365,6 +14359,7 @@
 
 	  //
 	})(moment);
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }
 /******/ ]);
