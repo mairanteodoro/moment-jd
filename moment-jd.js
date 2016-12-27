@@ -1,16 +1,27 @@
-;(function(moment) {
-//////
-// Julian Date (Julian day + time)
-///
-/*
-  Extracted from http://www.tondering.dk/claus/cal/julperiod.php:
+;(function() {
 
-  "JD 0 designates the 24 hours from noon TT on 1 January 4713 BC to noon TT on 2 January 4713 BC. (TT=Terrestrial Time, which is roughly equivalent to UTC. The current difference between the two is about one minute).
+  //////
+  // Julian Date (Julian day + time)
+  ///
+  /*
+    Extracted from http://www.tondering.dk/claus/cal/julperiod.php:
 
-  This means that at noon TT on 1 January AD 2000, JD 2,451,545 started."
-*/
+    "JD 0 designates the 24 hours from noon TT on 1 January 4713 BC to noon TT on 2 January 4713 BC. (TT=Terrestrial Time, which is roughly equivalent to UTC. The current difference between the two is about one minute).
 
-  moment.fn.toJD = (dateObj) => {
+    This means that at noon TT on 1 January AD 2000, JD 2,451,545 started."
+  */
+
+  if (typeof moment !== 'undefined') {
+    console.log('moment-jd: moment is defined.');
+    var moment = moment;
+  } else if (typeof require !== 'undefined') {
+    console.log('moment-jd: moment is not defined; trying require("moment")...');
+    var moment = require('moment');
+  } else {
+    throw new Error('moment-jd: moment is not defined.')
+  }
+
+  moment.fn.toJD = function(dateObj) {
     /*
     JD is the Julian Day that starts at noon UTC.
     JDN is JD + fraction of day (time) from noon UTC.
@@ -64,13 +75,13 @@
                 // validate UTC (JD is always in UTC)
                 ((dateObj._isUTC ? dateObj.hour() : dateObj.hour() - dateObj.utcOffset() / 60) - 12) / 24 +
                 dateObj.minute() / 1440 +
-                dateObj.second() / 86400;
+                (dateObj.second() + dateObj.millisecond() / 1000) / 86400;
       }
     }
     return jd;
   }
 
-  moment.fn.fromJD = (myJD) => {
+  moment.fn.fromJD = function(myJD) {
     /*
       Convert a given Julian Date into Gregorian Date.
 
@@ -86,7 +97,7 @@
     // Julian calendar ends on 1582 Oct 05.
     // Dates prior or equal to 1582 Oct 04 @ 23:59:59
     // correspond to JD <= 2299160.49999...
-    if (myJD <= 2299160.5) {
+    if (myJD < 2299160.5) {
       // Julian calendar
       var b = 0;
       var c = myJD + 32082;
@@ -114,14 +125,16 @@
         myHour = 0;
         myMinute = 0;
         mySecond = 0;
+        myMillisecond = 0;
       } else {
         myHour = Math.floor((myDay % 1) < 0.5 ?
-        // (myDay % 1) <= 0.5 corresponds to afternoon + night (i.e. 12:00:01-23:59:59)
+        // (myDay % 1) <= 0.5 corresponds to afternoon + night (i.e. 12:00:01-23:59:59.999)
                             (myDay % 1) * 24 + 12 :
-        // (myDay % 1) > 0.5 corresponds to the "wee" hours + morning (i.e. 00:00:01-11:59:59)
+        // (myDay % 1) > 0.5 corresponds to the "wee" hours + morning (i.e. 00:00:01-11:59:59.999)
                             (myDay % 1) * 24 - 12);
         myMinute = ((myDay % 1) * 1440 - ((myDay % 1) * 1440) % 1) % 60;
         mySecond = ((myDay % 1) * 86400 - ((myDay % 1) * 86400) % 1) % 60;
+        myMillisecond = (1000 * (((myDay % 1) * 86400) % 60 - mySecond)).toFixed(0);
         myDay = myDay - myDay % 1;
       }
     } else {
@@ -129,8 +142,33 @@
       myHour = 12;
       myMinute = 0;
       mySecond = 0;
+      myMillisecond = 0;
     }
 
+    // compensating for day "bubble up"
+    // due to dates involving midnight
+    if (myDay > 31) {
+      // reset day
+      myDay = 1;
+      // bubble up month
+      myMonth += 1
+      if (myMonth > 11) {
+        // reset month
+        myMonth = 1;
+        // bubble up year
+        myYear += 1;
+      }
+    }
+
+    // compensating for the fact that both
+    // year=0 and year=-1 correspond to 1 B.C.E.
+    myYear = myYear <= 0 ? myYear - 1 : myYear;
+
+    // console.log(myYear, myMonth-1, myDay, myHour, myMinute, mySecond, myMillisecond);
+
+    // return number of milliseconds since
+    // the Unix Epoch (Jan 1 1970 12AM UTC)
+    // (ECMAScript calls this Time Value)
     return moment.utc(
                       [myYear,
                       // keep Moment.js format for
@@ -139,10 +177,11 @@
                       myDay,
                       myHour,
                       myMinute,
-                      mySecond]
-    );
+                      mySecond,
+                      myMillisecond]
+                      );
   }
 
   return moment;
 
-})(moment);
+}).apply(this);

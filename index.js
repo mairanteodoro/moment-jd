@@ -6,13 +6,13 @@ import './moment-jd';
 
 var date = moment.utc();
 var jd = moment.fn.toJD(date);
-// moment.fn.fromJD() will return UNIX time
+// moment.fn.fromJD() will return UNIX timestamp in milliseconds
 var convertedDate = moment.fn.fromJD(jd).toISOString();
 
 $(function(){
 
-  $('#date').html('Current ISO-8601: ' + date.toISOString());
-  $('#jd').html('Corresponding JD: ' + jd);
-  $('#convertedDate').html('Date converted from JD: ' + convertedDate);
+  $('#date').html('Current ISO-8601 using moment.utc(): ' + date.toISOString());
+  $('#jd').html('moment.fn.toJD(): ' + jd);
+  $('#convertedDate').html('moment.fn.fromJD(): ' + convertedDate);
 
 });
