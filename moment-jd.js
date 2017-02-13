@@ -30,7 +30,6 @@
 
     "The algorithm below works fine for AD dates. If you want to use it for BC dates, in order to comply with ISO-8601, you must first convert the BC year to a negative year (e.g., 10 BC = -9). The algorithm works correctly for all dates after 4800 BC, i.e. at least for all positive Julian Day."
     */
-
     var year = dateObj.year() < 0 ? dateObj.year() + 1 : dateObj.year();
 
     if (year === 1582 && dateObj.month() === 9 && (dateObj.date() <= 14 && dateObj.date() >= 5)) {
@@ -135,7 +134,12 @@
         myMinute = ((myDay % 1) * 1440 - ((myDay % 1) * 1440) % 1) % 60;
         mySecond = ((myDay % 1) * 86400 - ((myDay % 1) * 86400) % 1) % 60;
         myMillisecond = (1000 * (((myDay % 1) * 86400) % 60 - mySecond)).toFixed(0);
-        myDay = myDay - myDay % 1;
+        // Julian day begins at noon, so if mod < 0.5 -> same day
+        myDay = myDay % 1 < 0.5 ?
+                // still same day
+                myDay - myDay % 1 :
+                // next day
+                myDay - myDay % 1 + 1;
       }
     } else {
       // it is noon
@@ -147,39 +151,58 @@
 
     // compensating for day "bubble up"
     // due to dates involving midnight
-    if (myDay > 31) {
-      // reset day
-      myDay = 1;
-      // bubble up month
-      myMonth += 1
-      if (myMonth > 11) {
-        // reset month
-        myMonth = 1;
-        // bubble up year
-        myYear += 1;
-      }
-    }
+    // if (myDay > 31) {
+    //   // reset day
+    //   myDay = 1;
+    //   // bubble up month
+    //   myMonth += 1
+    //   if (myMonth > 11) {
+    //     // reset month
+    //     myMonth = 1;
+    //     // bubble up year
+    //     myYear += 1;
+    //   }
+    // }
 
-    // compensating for the fact that both
-    // year=0 and year=-1 correspond to 1 B.C.E.
-    myYear = myYear <= 0 ? myYear - 1 : myYear;
+    // create final moment.utc() object with the current values
+    // N.B.: the returned value complies with ISO-8601:
+    // e.g. moment.utc().year(myYear) = -9 (result from the algorithm above)
+    // corresponds to 10 B.C.E. which is the same as -10
+    // which in turn is the actual returned value to the user
+    var temp = moment.utc()
+                      .year(myYear)
+                      .month(myMonth-1)
+                      .date(myDay)
+                      .hour(myHour)
+                      .minute(myMinute)
+                      .second(mySecond)
+                      .millisecond(myMillisecond)
+    // accounting for B.C.E. - C.E. transition (no year = 0)
+    temp.year(temp.year() <= 0 ? temp.year() - 1 : temp.year())
+
 
     // console.log(myYear, myMonth-1, myDay, myHour, myMinute, mySecond, myMillisecond);
 
-    // return number of milliseconds since
-    // the Unix Epoch (Jan 1 1970 12AM UTC)
-    // (ECMAScript calls this Time Value)
-    return moment.utc(
-                      [myYear,
-                      // keep Moment.js format for
-                      // months, i.e., 0->Jan; 1->Feb...
-                      myMonth - 1,
-                      myDay,
-                      myHour,
-                      myMinute,
-                      mySecond,
-                      myMillisecond]
-                      );
+    /*
+    From Moment.js docs:
+    "Date of Month"
+    "Accepts numbers from 1 to 31. If the range is exceeded, it will bubble up to the months."
+    "Note: if you chain multiple actions to construct a date, you should start from a year, then a month, then a day etc. Otherwise you may get unexpected results, like when day=31 and current month has only 30 days (the same applies to native JavaScript Date manipulation), the returned date will be 1st of the following month."
+
+    "Bad: moment().date(day).month(month).year(year)"
+
+    "Good: moment().year(year).month(month).date(day)"
+    */
+    // return moment.utc()
+    //                   .year(myYear)
+    //                   .month(myMonth-1)
+    //                   .date(myDay)
+    //                   .hour(myHour)
+    //                   .minute(myMinute)
+    //                   .second(mySecond)
+    //                   .millisecond(myMillisecond);
+    return temp
+
   }
 
   return moment;

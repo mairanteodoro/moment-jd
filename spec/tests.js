@@ -29,7 +29,7 @@ describe('fromDateToJD', function() {
     };
   });
 
-  it('should return zero', function() {
+  it('should return zero; begining of JD system', function() {
     expect(moment.fn.toJD(moment.utc([-4713, 0, 1, 12, 0, 0]))).toEqual(0);
   });
 
@@ -72,7 +72,7 @@ describe('fromJDtoDate', function() {
     expect(moment(res).date()).toEqual(15);
   });
 
-  it('should test the begining of the Julian Date', function() {
+  it('should test the beginning of the Julian Date', function() {
     jd = 0;
     res = moment.fn.fromJD(jd);
     expect(moment(res).year()).toEqual(-4713);
@@ -84,27 +84,71 @@ describe('fromJDtoDate', function() {
     expect(moment(res).millisecond()).toEqual(0);
   });
 
-  it('should test the C.E. to B.C.E. epoch transition', function() {
-    jd = 1721423.499999; // B.C.E. 1 Dec 31 23:59:59.9
+  it('should test a regular B.C.E. (before common era, a.k.a. BC) date', function() {
+    jd = 1648373.5; // B.C.E. 200 Jan 1 00:00:00
     res = moment.fn.fromJD(jd);
-    expect(moment(res).year()).toEqual(-1);
-    expect(moment(res).month()).toEqual(11);
-    expect(moment(res).date()).toEqual(31);
-    expect(moment(res).hour()).toEqual(23);
-    expect(moment(res).minute()).toEqual(59);
-    expect(moment(res).second()).toEqual(59);
-    // the actual millisecond value returned is 914
-    expect(moment(res).millisecond()).toBeCloseTo(900, -1.5);
-
-    jd = 1721423.5; // C.E. 1 Jan 1 00:00:00.000
-    res = moment.fn.fromJD(jd);
-    expect(moment(res).year()).toEqual(1);
+    expect(moment(res).year()).toEqual(-200);
     expect(moment(res).month()).toEqual(0);
     expect(moment(res).date()).toEqual(1);
     expect(moment(res).hour()).toEqual(0);
     expect(moment(res).minute()).toEqual(0);
     expect(moment(res).second()).toEqual(0);
     expect(moment(res).millisecond()).toEqual(0);
+  });
+
+  it('should test the transition from B.C.E. to C.E. (common era, a.k.a. AD)', function() {
+    jd = 1721057.0; // B.C.E. 2 Dec 31 12:00:00
+    res = moment.fn.fromJD(jd);
+    expect(moment(res).year()).toEqual(-2); // B.C. 2 => year = -2 (OK)
+    expect(moment(res).month()).toEqual(11);
+    expect(moment(res).date()).toEqual(31);
+    expect(moment(res).hour()).toEqual(12);
+    expect(moment(res).minute()).toEqual(00);
+    expect(moment(res).second()).toEqual(00);
+    // the actual millisecond value returned is 914
+    expect(moment(res).millisecond()).toBeCloseTo(0, -1.5);
+
+    jd = 1721057.5; // B.C.E. 1 Jan 1 00:00:00.000
+    res = moment.fn.fromJD(jd);
+    expect(moment(res).year()).toEqual(-1); // B.C. 1 => year = -1 (OK)
+    expect(moment(res).month()).toEqual(0);
+    expect(moment(res).date()).toEqual(1);
+    expect(moment(res).hour()).toEqual(0);
+    expect(moment(res).minute()).toEqual(0);
+    expect(moment(res).second()).toEqual(0);
+    expect(moment(res).millisecond()).toEqual(0);
+
+    jd = 1721423.499999; // B.C.E. 1 Dec 31 12:00:00.000
+    res = moment.fn.fromJD(jd);
+    expect(moment(res).year()).toEqual(-1); // B.C. 1 => year = -1 (OK)
+    expect(moment(res).month()).toEqual(11);
+    expect(moment(res).date()).toEqual(31);
+    expect(moment(res).hour()).toEqual(23);
+    expect(moment(res).minute()).toEqual(59);
+    expect(moment(res).second()).toEqual(59);
+    // the returned value is 914 milliseconds
+    expect(moment(res).millisecond()).toBeCloseTo(900, -1.5);
+
+    jd = 1721423.5; // C.E. 1 Jan 1 00:00:00.000
+    res = moment.fn.fromJD(jd);
+    expect(moment(res).year()).toEqual(1); // A.D. 1 => year = 1 (OK)
+    expect(moment(res).month()).toEqual(0);
+    expect(moment(res).date()).toEqual(1);
+    expect(moment(res).hour()).toEqual(0);
+    expect(moment(res).minute()).toEqual(0);
+    expect(moment(res).second()).toEqual(0);
+    expect(moment(res).millisecond()).toEqual(0);
+
+    jd = 1721788.499999; // C.E. 1 Dec 31 23:59:59.9
+    res = moment.fn.fromJD(jd);
+    expect(moment(res).year()).toEqual(1); // A.D. 1 => year = 1 (OK)
+    expect(moment(res).month()).toEqual(11);
+    expect(moment(res).date()).toEqual(31);
+    expect(moment(res).hour()).toEqual(23);
+    expect(moment(res).minute()).toEqual(59);
+    expect(moment(res).second()).toEqual(59);
+    expect(moment(res).millisecond()).toBeCloseTo(900, -1.5);
+
   });
 
 });
